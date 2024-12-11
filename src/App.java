@@ -19,21 +19,25 @@ public class App {
         crearMazo();
         mezclar();
 
-        Jugador p1 = new Jugador("manu");
+        Jugador p1 = new Jugador("manu",1000.0);
         
 
-        for(int i=0;i<3;i++){
-            imprimirCarta(0);
+        for(int i=0;i<2;i++){
             darCartaJugador(p1,getMazo().get(0));
             getMazo().remove(0);
         }
         
+        imprimirCarta(p1.getCartasEnMano());
 
-        System.out.println(masDe21(p1.getCartasEnMano()));
-        System.out.println("Total:"+sumaValores(p1.getCartasEnMano()));
+        
+        System.out.println("\nTotal:"+sumaValores(p1.getCartasEnMano()));
 
     }
     
+    private ArrayList<Carta> getMazo() {
+        return mazo;
+    }
+
     private void addCarta(Carta c){
         this.mazo.add(c);
     }
@@ -91,18 +95,56 @@ public class App {
 
         
     }
-    //hacer devuelta para que imprima todas las cartas una al lado de otra
-    private void imprimirCarta(int p){
-        System.out.println("┌─────────┐\n│"+mazo.get(p).getNumero()+"        │\n│         │\n│    "+mazo.get(p).getTipo()+"    │\n│         │\n│        "+mazo.get(p).getNumero()+"│\n└─────────┘");
+    
+    private void imprimirCarta(ArrayList<Carta> cartas){
+        int s = cartas.size();
+        
+        for(int i=0;i<s;i++){
+            System.out.print("┌─────────┐");
+        }
+        
+        System.out.println();
+
+        for(Carta c : cartas){
+            System.out.print("│"+c.getNumero()+"        │");
+        }
+        
+        System.out.println();
+
+        for(int i=0;i<s;i++){
+            System.out.print("│         │");
+        }
+
+        System.out.println();
+
+        for(Carta c : cartas){
+            System.out.print("│    "+c.getTipo()+"    │");
+        }
+
+        System.out.println();
+        
+        for(int i=0;i<s;i++){
+            System.out.print("│         │");
+        }
+        
+        System.out.println();
+
+        for(Carta c : cartas){
+            System.out.print("│        "+c.getNumero()+"|");
+        }
+
+        System.out.println();
+        
+        for(int i=0;i<s;i++){
+            System.out.print("└─────────┘");
+        }
+        
     }
 
-    
+    private void imprimirCarta(ArrayList<Carta> carta, int p){
+        System.out.println("┌─────────┐\n│"+carta.get(p).getNumero()+"        │\n│         │\n│    "+carta.get(p).getTipo()+"    │\n│         │\n│        "+carta.get(p).getNumero()+"│\n└─────────┘");
 
-    private ArrayList<Carta> getMazo() {
-        return mazo;
     }
-
-    
 
 }
 
@@ -149,12 +191,12 @@ class Carta{
 
 }
 
-class Jugador{
+class Dealer{
 
     private String nombre;
     private ArrayList<Carta> cartasEnMano = new ArrayList<>();
 
-    public Jugador(String n){
+    public Dealer(String n){
         setNombre(n);
     }
 
@@ -175,6 +217,32 @@ class Jugador{
     }
 
 
+}
+
+class Jugador extends Dealer{
+    
+    private double plata;
+    
+    public Jugador(String n,Double p) {
+        super(n);
+        setPlata(p);
+    }
+
+    private void setPlata(double plata){
+        this.plata = plata;
+    }
+
+    public double getPlata(){
+        return this.plata;
+    }
+    
+    public void cambiarPlata(double p){
+        if(p>0)
+            this.plata += p;
+        else   
+            this.plata -= p;
+    }
+    
 }
 
 class Leer{
