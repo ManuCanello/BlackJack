@@ -17,7 +17,8 @@ public class App {
     private void juego(){
         crearMazo();
         mezclar();
-
+//Falta pedir nombre de jugador, que se reinicie cartas en mano, cuando volver a mezclar(y agregar cartas que no esten (if carta a agreagar != 4 cartas actuales, agregar), y que el juego
+// se juege hasta que no haya plata o no quiera mas jugar
         Jugador p1 = new Jugador("KNE",1000.0);
         Dealer dealer = new Dealer("DEALER");
         
