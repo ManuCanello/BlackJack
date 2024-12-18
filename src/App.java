@@ -15,15 +15,46 @@ public class App{
     
     
     private void juego(){
-    //Falta pedir nombre de jugador, que se reinicie cartas en mano, cuando volver a mezclar(y agregar cartas que no esten (if carta a agreagar != 4 cartas actuales, agregar), y que el juego
-    // se juege hasta que no haya plata o no quiera mas jugar. 
-        crearMazo();
-        mezclar();
-        Jugador p1 = new Jugador("KNE",1000.0);
-        Dealer dealer = new Dealer("DEALER");
         
-        repartirCartas(dealer,p1);
-        juegoJugador(dealer,p1,0);
+        Jugador p1 = new Jugador(pedirNombre(),1000.0);
+        Dealer dealer = new Dealer("DEALER");
+        Pantalla.borrarPantalla();
+        
+        iniciarJuego();
+        
+        boolean continuar = false;
+        
+        do { 
+            
+            
+            if(p1.getPlata()>0){
+                System.out.println("1)Jugar \n2)Salir");
+                switch (Leer.leeInt()) {
+                    case 1 -> {
+                        apuestas(p1);
+                        if(getMazo().size()<4){
+                            restablecerMazo();
+                        }
+                        Pantalla.borrarPantalla();
+                        repartirCartas(dealer,p1);
+                        juegoJugador(dealer,p1,0);
+                        reiniciar(p1,dealer);
+                    }
+                    case 2 -> continuar = true;
+                    default -> {
+                        System.out.println("Intente devuelta");
+                        Pantalla.esperarTecla();
+                        Pantalla.borrarPantalla();
+                    }
+                }
+            }else{
+                System.out.println("Te quedaste sin un mango");
+                continuar = true;
+             }
+            
+            } while (!continuar);
+        
+        
     
     }
     
@@ -60,23 +91,30 @@ public class App{
         return total;
     }
 
+    private void iniciarJuego(){
+        crearMazo();
+        mezclar();
+    }
+
+
     private void crearMazo(){
-        String[] tipo={"$",("\u001B[31m"+"@"+"\u001B[0m"),"&",("\u001B[31m"+"^"+"\u001B[0m")};
+        String[] tipo={"♠",("\u001B[31m"+"♥"+"\u001B[0m"),"♣",("\u001B[31m"+"♦"+"\u001B[0m")};
+        String[] direc={"pic","cor","tre","dia"};
         
         for(int t=0;t<4;t++){
             for(int i=1; i<=12;i++){
                 if(i==1)
-                    addCarta(new Carta("A",11,tipo[t]));
+                    addCarta(new Carta("A",11,tipo[t],direc[t]+"-A"));
                 else{
                     if(i<10)
-                        addCarta(new Carta(String.valueOf(i),i,tipo[t]));
+                        addCarta(new Carta(String.valueOf(i),i,tipo[t],direc[t]+"-"+String.valueOf(i)));
                     else{
                         if(i==10)
-                            addCarta(new Carta("J",10,tipo[t]));
+                            addCarta(new Carta("J",10,tipo[t],direc[t]+"-J"));
                         if(i==11)
-                            addCarta(new Carta("Q",10,tipo[t]));
+                            addCarta(new Carta("Q",10,tipo[t],direc[t]+"-Q"));
                         if(i==12)
-                            addCarta(new Carta("K",10,tipo[t]));
+                            addCarta(new Carta("K",10,tipo[t],direc[t]+"-K"));
                     }
                 }
                 
@@ -88,6 +126,70 @@ public class App{
         Collections.shuffle(mazo);
     }
     
+    private void reiniciar(Jugador jugador, Dealer dealer){
+        jugador.getCartasEnMano().clear();
+        
+        if(!jugador.getDividir().isEmpty())
+            jugador.getDividir().clear();
+        
+        dealer.getCartasEnMano().clear();
+
+        jugador.setApuesta(0.0);
+    }
+
+    private void restablecerMazo(){
+        ArrayList<Carta> existentes = new ArrayList<>();
+        for(Carta c : getMazo()){
+            existentes.add(c);
+        }
+        
+        getMazo().clear();
+        crearMazo();
+        
+        for(Carta m : getMazo()){
+            for(Carta c : existentes){
+                if(c.getNumero().equals(m.getTipo()) && c.getTipo().equals(m.getTipo()))
+                    getMazo().remove(m);
+            }
+        }
+        mezclar();
+        getMazo().addAll(0,existentes);
+        existentes.clear();
+    }
+   
+
+    private String pedirNombre(){
+        System.out.println("Nombre del jugador");
+        return Leer.leeString();
+    }
+
+    private void apuestas(Jugador jugador){
+        boolean continuar = false;
+        double dinero;
+        do { 
+            Pantalla.borrarPantalla();
+            System.out.println("Dinero:$"+jugador.getPlata()+"\nApuestas:");
+            dinero = Leer.leerDouble();
+            if(dinero <= jugador.getPlata() && dinero > 0){
+                jugador.cambiarPlata(0-dinero);
+                jugador.setApuesta(dinero);
+                continuar = true;
+            }else{
+                if(dinero <=0)
+                    System.out.println("Ingrese una cantidad valida");
+                else
+                    System.out.println("No posse esa cantidad de dinero");
+                
+                Pantalla.esperarTecla();
+                
+            }
+        } while (!continuar);
+    }
+
+    private double recompensa(Jugador jugador){
+        return jugador.getApuesta()*2;
+    }
+
     private void comprobarValorA(ArrayList<Carta> lista){
         for(Carta c : lista ){
             if(c.getValor()==11 && sumaValores(lista)>21)
@@ -125,6 +227,8 @@ public class App{
             imprimirCarta(jugador);
             System.out.println("\nJuego 1:"+sumaValores(jugador.getCartasEnMano())+espaciosPuntos(jugador.getCartasEnMano())+"Juego 2:"+sumaValores(jugador.getDividir()));
         }
+
+        System.out.println("Dinero:$"+jugador.getPlata());
     }
 
     private void juegoJugador(Dealer dealer,Jugador jugador,int t){
@@ -271,26 +375,38 @@ public class App{
     
     private void ganador(Dealer dealer, Jugador jugador){
     
-        if(sumaValores(dealer.getCartasEnMano()) > 21 && sumaValores(jugador.getCartasEnMano()) > 21)
-            System.out.println("Ambos se pasaron");
+        if(sumaValores(dealer.getCartasEnMano()) > 21 && sumaValores(jugador.getCartasEnMano()) > 21){
+            System.out.println("Ambos se pasaron\nTe devolvemos lo apostado:+$"+jugador.getApuesta());
+            jugador.cambiarPlata(jugador.getApuesta());
+
+        }
+            
         
         if(sumaValores(dealer.getCartasEnMano()) <= 21 && sumaValores(jugador.getCartasEnMano()) > 21)
-            System.out.println(dealer.getNombre()+" es el ganador");
+            System.out.println(dealer.getNombre()+" es el ganador\n-$"+jugador.getApuesta());
+            
         
-        if(sumaValores(dealer.getCartasEnMano()) > 21 && sumaValores(jugador.getCartasEnMano()) <= 21)
-            System.out.println(jugador.getNombre()+" es el ganador");
-
+        if(sumaValores(dealer.getCartasEnMano()) > 21 && sumaValores(jugador.getCartasEnMano()) <= 21){
+            System.out.println(jugador.getNombre()+" es el ganador\n+$"+recompensa(jugador));
+            jugador.cambiarPlata(recompensa(jugador)); 
+        }
+        
         if(sumaValores(dealer.getCartasEnMano()) <= 21 && sumaValores(jugador.getCartasEnMano()) <= 21){
-            if(sumaValores(dealer.getCartasEnMano()) == sumaValores(jugador.getCartasEnMano()))
-                System.out.println("Empate");
-            else{
+            if(sumaValores(dealer.getCartasEnMano()) == sumaValores(jugador.getCartasEnMano())){
+                System.out.println("Empate\n+$"+jugador.getApuesta());
+                jugador.cambiarPlata(jugador.getApuesta());
+        }else{
                 if(sumaValores(dealer.getCartasEnMano()) > sumaValores(jugador.getCartasEnMano()))
-                    System.out.println(dealer.getNombre()+" es el ganador");
-            else
-                    System.out.println(jugador.getNombre()+" es el ganador");
+                    System.out.println(dealer.getNombre()+" es el ganador\n-$"+jugador.getApuesta());
+            else{
+                    System.out.println(jugador.getNombre()+" es el ganador\n+$"+recompensa(jugador));
+                    jugador.cambiarPlata(recompensa(jugador)); 
+
+            }
             }
             
         }      
+
     }
 
     private void ganadorDividir(Dealer dealer, Jugador jugador){
@@ -524,7 +640,9 @@ public class App{
         }
     }
 
-    
+    private String direccionCarta(Carta c){
+        return "./cartas/" + c.getDireccion() + ".png";
+    }
 }
 
 class Carta{
@@ -532,11 +650,13 @@ class Carta{
     private String numero;
     private int valor;
     private String tipo;
+    private String direccion;
 
-    public Carta(String n, int v, String t){
+    public Carta(String n, int v, String t,String d){
         setNumero(n);
         setValor(v);
         setTipo(t);
+        setDireccion(d);
     }
 
     private void setNumero(String numero) {
@@ -569,6 +689,14 @@ class Carta{
 
     public void cambiarValorDeA11(){
         setValor(11);
+    }
+
+    public String getDireccion() {
+        return direccion;
+    }
+
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
     }
 
 }
@@ -604,6 +732,7 @@ class Dealer{
 class Jugador extends Dealer{
     
     private double plata;
+    private double apuesta;
     private ArrayList<Carta> dividir= new ArrayList<>();
     
     public Jugador(String n,Double p) {
@@ -624,14 +753,19 @@ class Jugador extends Dealer{
     }
     
     public void cambiarPlata(double p){
-        if(p>0)
-            this.plata += p;
-        else   
-            this.plata -= p;
+        this.plata += p;
     }
 
     public void setDividir(Carta c) {
         this.dividir.add(c);
+    }
+
+    public double getApuesta() {
+        return apuesta;
+    }
+
+    public void setApuesta(Double a) {
+        this.apuesta=a;
     }
 
     
@@ -648,6 +782,11 @@ class Leer{
     public static int leeInt(){
         Scanner sc = new Scanner(System.in);
         return sc.nextInt();
+    }
+
+    public static Double leerDouble(){
+        Scanner sc = new Scanner(System.in);
+        return sc.nextDouble();
     }
 
 }
