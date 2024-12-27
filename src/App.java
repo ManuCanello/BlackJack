@@ -32,7 +32,7 @@ public class App{
                 switch (Leer.leeInt()) {
                     case 1 -> {
                         apuestas(p1);
-                        if(getMazo().size()<4){
+                        if(getMazo().size()<10){
                             restablecerMazo();
                         }
                         Pantalla.borrarPantalla();
@@ -167,7 +167,6 @@ public class App{
         boolean continuar = false;
         double dinero;
         do { 
-            Pantalla.borrarPantalla();
             System.out.println("Dinero:$"+jugador.getPlata()+"\nApuestas:");
             dinero = Leer.leerDouble();
             if(dinero <= jugador.getPlata() && dinero > 0){
@@ -186,8 +185,12 @@ public class App{
         } while (!continuar);
     }
 
-    private double recompensa(Jugador jugador){
-        return jugador.getApuesta()*2;
+    private void apuestaDoble(Jugador jugador){
+        jugador.cambiarPlata(0-jugador.getApuesta());
+        jugador.setApuesta(jugador.getApuesta()+jugador.getApuesta());
+    }
+    private double recompensa(Jugador jugador,int v){
+        return jugador.getApuesta()*v;
     }
 
     private void comprobarValorA(ArrayList<Carta> lista){
@@ -229,6 +232,7 @@ public class App{
         }
 
         System.out.println("Dinero:$"+jugador.getPlata());
+        System.out.println("Apeusta:$"+jugador.getApuesta());
     }
 
     private void juegoJugador(Dealer dealer,Jugador jugador,int t){
@@ -256,10 +260,10 @@ public class App{
                     
                 System.out.print("1)Pedir carta 2)Plantarse");
                 
-                if(jugador.getCartasEnMano().size()==2 && t==0 || jugador.getDividir().size()==2 && t==1)
+                if(jugador.getApuesta() <= jugador.getPlata() && jugador.getCartasEnMano().size()==2 && t==0 || jugador.getDividir().size()==2 && t==1)
                     System.out.print(" 3)Doblar");
                 
-                if(jugador.getDividir().isEmpty() && jugador.getCartasEnMano().get(0).getNumero().equals(jugador.getCartasEnMano().get(1).getNumero()))
+                if(jugador.getApuesta() <= jugador.getPlata() && jugador.getDividir().isEmpty() && jugador.getCartasEnMano().get(0).getNumero().equals(jugador.getCartasEnMano().get(1).getNumero()))
                         System.out.print(" 4)Dividir");
                 
                 System.out.println("\n");
@@ -276,14 +280,15 @@ public class App{
                         cont = true;
                         break;
                     case 3:
-                        if(jugador.getCartasEnMano().size() ==2 && t==0){
+                        if(jugador.getApuesta() <= jugador.getPlata() && jugador.getCartasEnMano().size() ==2 && t==0){
+                            apuestaDoble(jugador);
                             darCarta(jugador, getMazo().get(0));
                             mostrarCartas(dealer, jugador,0);
                             cont = true;
                             break;
                         }
                         
-                        if(jugador.getDividir().size()==2 && t==1){
+                        if(jugador.getApuesta() <= jugador.getPlata() && jugador.getDividir().size()==2 && t==1){
                             darCartaDividir(jugador, getMazo().get(0));
                             mostrarCartas(dealer, jugador,0);
                             cont = true;
@@ -293,7 +298,7 @@ public class App{
                         break;
                             
                     case 4:
-                        if(jugador.getDividir().isEmpty() && jugador.getCartasEnMano().get(0).getNumero().equals(jugador.getCartasEnMano().get(1).getNumero())){
+                        if(jugador.getApuesta() <= jugador.getPlata() && jugador.getDividir().isEmpty() && sonInguales(jugador)){
                             Pantalla.borrarPantalla();
                             juegoDividir(dealer,jugador);
                             cont = true;
@@ -353,13 +358,15 @@ public class App{
         mostrarCartas(dealer, jugador, 1);
 
         if(jugador.getDividir().isEmpty())
-            ganador(dealer,jugador);
+            ganador(dealer,jugador,jugador.getCartasEnMano());
         
     }
 
     private void juegoDividir(Dealer dealer, Jugador jugador){
         if(jugador.getCartasEnMano().get(0).getValor()==1)
             jugador.getCartasEnMano().get(0).cambiarValorDeA11();
+        
+        apuestaDoble(jugador);
         
         darCartaDividir(jugador, jugador.getCartasEnMano().get(1));
         jugador.getCartasEnMano().remove(1);
@@ -369,92 +376,55 @@ public class App{
         
         juegoJugador(dealer, jugador, 0);
         juegoJugador(dealer, jugador, 1);
-        ganadorDividir(dealer, jugador);
+        
+        ganador(dealer, jugador, jugador.getCartasEnMano());
+        Pantalla.esperarTecla();
+        ganador(dealer, jugador, jugador.getDividir());
         
     }
     
-    private void ganador(Dealer dealer, Jugador jugador){
+    private void ganador(Dealer dealer, Jugador jugador, ArrayList<Carta> cartas){
     
-        if(sumaValores(dealer.getCartasEnMano()) > 21 && sumaValores(jugador.getCartasEnMano()) > 21){
+        if(sumaValores(cartas) == 21 && cartas.size() == 2){
+            System.out.println("BLACKJACK!!!!");
+            jugador.cambiarPlata(recompensa(jugador, 4));
+        }
+        
+        if(sumaValores(dealer.getCartasEnMano()) > 21 && sumaValores(cartas) > 21){
             System.out.println("Ambos se pasaron\nTe devolvemos lo apostado:+$"+jugador.getApuesta());
             jugador.cambiarPlata(jugador.getApuesta());
-
         }
             
-        
-        if(sumaValores(dealer.getCartasEnMano()) <= 21 && sumaValores(jugador.getCartasEnMano()) > 21)
+        if(sumaValores(dealer.getCartasEnMano()) <= 21 && sumaValores(cartas) > 21)
             System.out.println(dealer.getNombre()+" es el ganador\n-$"+jugador.getApuesta());
             
         
-        if(sumaValores(dealer.getCartasEnMano()) > 21 && sumaValores(jugador.getCartasEnMano()) <= 21){
-            System.out.println(jugador.getNombre()+" es el ganador\n+$"+recompensa(jugador));
-            jugador.cambiarPlata(recompensa(jugador)); 
+        if(sumaValores(dealer.getCartasEnMano()) > 21 && sumaValores(cartas) <= 21){
+            System.out.println(jugador.getNombre()+" es el ganador\n+$"+recompensa(jugador,2));
+            jugador.cambiarPlata(recompensa(jugador,2)); 
         }
         
-        if(sumaValores(dealer.getCartasEnMano()) <= 21 && sumaValores(jugador.getCartasEnMano()) <= 21){
-            if(sumaValores(dealer.getCartasEnMano()) == sumaValores(jugador.getCartasEnMano())){
+        if(sumaValores(dealer.getCartasEnMano()) <= 21 && sumaValores(cartas) <= 21){
+            if(sumaValores(dealer.getCartasEnMano()) == sumaValores(cartas)){
                 System.out.println("Empate\n+$"+jugador.getApuesta());
                 jugador.cambiarPlata(jugador.getApuesta());
         }else{
-                if(sumaValores(dealer.getCartasEnMano()) > sumaValores(jugador.getCartasEnMano()))
+                if(sumaValores(dealer.getCartasEnMano()) > sumaValores(cartas))
                     System.out.println(dealer.getNombre()+" es el ganador\n-$"+jugador.getApuesta());
             else{
-                    System.out.println(jugador.getNombre()+" es el ganador\n+$"+recompensa(jugador));
-                    jugador.cambiarPlata(recompensa(jugador)); 
+                    System.out.println(jugador.getNombre()+" es el ganador\n+$"+recompensa(jugador,2));
+                    jugador.cambiarPlata(recompensa(jugador,2)); 
 
             }
             }
             
         }      
 
+        
     }
 
-    private void ganadorDividir(Dealer dealer, Jugador jugador){
-        //juego 1
-        
-        if(sumaValores(dealer.getCartasEnMano()) > 21 && sumaValores(jugador.getCartasEnMano()) > 21)
-            System.out.println("Juego 1:Ambos se pasaron");
-        
-        if(sumaValores(dealer.getCartasEnMano()) <= 21 && sumaValores(jugador.getCartasEnMano()) > 21)
-            System.out.println("Juego 1:"+dealer.getNombre()+" es el ganador");
-        
-        if(sumaValores(dealer.getCartasEnMano()) > 21 && sumaValores(jugador.getCartasEnMano()) <= 21)
-            System.out.println("Juego 1:"+jugador.getNombre()+" es el ganador");
-
-        if(sumaValores(dealer.getCartasEnMano()) <= 21 && sumaValores(jugador.getCartasEnMano()) <= 21){
-            if(sumaValores(dealer.getCartasEnMano()) == sumaValores(jugador.getCartasEnMano()))
-                System.out.println("Juego 1:Empate");
-            else{
-                if(sumaValores(dealer.getCartasEnMano()) > sumaValores(jugador.getCartasEnMano()))
-                    System.out.println("Juego 1:"+dealer.getNombre()+" es el ganador");
-            else
-                    System.out.println("Juego 1:"+jugador.getNombre()+" es el ganador");
-            }
-            
-        }
-        //juego 2
-        if(sumaValores(dealer.getCartasEnMano()) > 21 && sumaValores(jugador.getDividir()) > 21)
-            System.out.println("Juego 2:Ambos se pasaron");
-        
-        if(sumaValores(dealer.getCartasEnMano()) <= 21 && sumaValores(jugador.getDividir()) > 21)
-            System.out.println("Juego 2:"+dealer.getNombre()+" es el ganador");
-        
-        if(sumaValores(dealer.getCartasEnMano()) > 21 && sumaValores(jugador.getDividir()) <= 21)
-            System.out.println("Juego 2:"+jugador.getNombre()+" es el ganador");
-
-        if(sumaValores(dealer.getCartasEnMano()) <= 21 && sumaValores(jugador.getDividir()) <= 21){
-            if(sumaValores(dealer.getCartasEnMano()) == sumaValores(jugador.getDividir()))
-                System.out.println("Juego 2:Empate");
-            else{
-                if(sumaValores(dealer.getCartasEnMano()) > sumaValores(jugador.getDividir()))
-                    System.out.println("Juego 2:"+dealer.getNombre()+" es el ganador");
-            else
-                    System.out.println("Juego 2:"+jugador.getNombre()+" es el ganador");
-            }
-            
-        }  
-
-        Pantalla.esperarTecla();
+    private boolean sonInguales(Jugador jugador){
+        return jugador.getCartasEnMano().get(0).getNumero().equals(jugador.getCartasEnMano().get(1).getNumero());
     }
 
 
@@ -505,7 +475,6 @@ public class App{
         
         
     }
-
 
     private void imprimirCarta(Jugador jugador){
         int s = jugador.getCartasEnMano().size(); 
