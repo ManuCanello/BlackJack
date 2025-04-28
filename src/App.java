@@ -1,7 +1,5 @@
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Scanner;
 
 
 public class App{
@@ -50,7 +48,7 @@ public class App{
             }else{
                 System.out.println("Te quedaste sin un mango");
                 continuar = true;
-             }
+            }
             
             } while (!continuar);
         
@@ -156,7 +154,7 @@ public class App{
         getMazo().addAll(0,existentes);
         existentes.clear();
     }
-   
+
 
     private String pedirNombre(){
         System.out.println("Nombre del jugador");
@@ -237,7 +235,7 @@ public class App{
 
     private void juegoJugador(Dealer dealer,Jugador jugador,int t){
         boolean cont = false;
-      
+
         if(t==0)
             comprobarValorA(jugador.getCartasEnMano());
         else
@@ -614,172 +612,12 @@ public class App{
     }
 }
 
-class Carta{
-
-    private String numero;
-    private int valor;
-    private String tipo;
-    private String direccion;
-
-    public Carta(String n, int v, String t,String d){
-        setNumero(n);
-        setValor(v);
-        setTipo(t);
-        setDireccion(d);
-    }
-
-    private void setNumero(String numero) {
-        this.numero = numero;
-    }
-
-    private void setValor(int valor) {
-        this.valor = valor;
-    }
-
-    private void setTipo(String tipo) {
-        this.tipo = tipo;
-    }
-
-    public String getNumero() {
-        return numero;
-    }
-
-    public int getValor() {
-        return valor;
-    }
-
-    public String getTipo() {
-        return tipo;
-    }
-
-    public void cambiarValorDeA(){
-        setValor(1);
-    }
-
-    public void cambiarValorDeA11(){
-        setValor(11);
-    }
-
-    public String getDireccion() {
-        return direccion;
-    }
-
-    public void setDireccion(String direccion) {
-        this.direccion = direccion;
-    }
-
-}
-
-class Dealer{
-
-    private String nombre;
-    private ArrayList<Carta> cartasEnMano = new ArrayList<>();
-
-    public Dealer(String n){
-        setNombre(n);
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    private void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public ArrayList<Carta> getCartasEnMano() {
-        return cartasEnMano;
-    }
-
-    public void setCartasEnMano(Carta c) {
-        this.cartasEnMano.add(c);
-    }
 
 
-}
 
-class Jugador extends Dealer{
-    
-    private double plata;
-    private double apuesta;
-    private ArrayList<Carta> dividir= new ArrayList<>();
-    
-    public Jugador(String n,Double p) {
-        super(n);
-        setPlata(p);
-    }
 
-    private void setPlata(double plata){
-        this.plata = plata;
-    }
 
-    public double getPlata(){
-        return this.plata;
-    }
 
-    public ArrayList<Carta> getDividir() {
-        return dividir;
-    }
-    
-    public void cambiarPlata(double p){
-        this.plata += p;
-    }
 
-    public void setDividir(Carta c) {
-        this.dividir.add(c);
-    }
 
-    public double getApuesta() {
-        return apuesta;
-    }
 
-    public void setApuesta(Double a) {
-        this.apuesta=a;
-    }
-
-    
-    
-}
-
-class Leer{
-
-    public static String leeString(){
-        Scanner sc = new Scanner(System.in);
-        return sc.nextLine();
-    }
-
-    public static int leeInt(){
-        Scanner sc = new Scanner(System.in);
-        return sc.nextInt();
-    }
-
-    public static Double leerDouble(){
-        Scanner sc = new Scanner(System.in);
-        return sc.nextDouble();
-    }
-
-}
-
-class Pantalla{
-
-    public static void borrarPantalla(){
-        System.out.print("\033[H\033[2J");
-    }
-
-    public static void esperarTecla(){
-        try {
-            System.in.read();
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-        }
-        
-    }
-
-    public static void esperar(int ms){
-        try {
-            Thread.sleep(ms);  
-        } catch (InterruptedException e) {
-            
-        }
-    }
-}
